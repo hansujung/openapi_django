@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Dark Map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+    <style>
+        body { margin:0; padding:0; }
+        #map {
+            position:absolute;
+            top:0;
+            bottom:0;
+            width:100%;
+        }
+        #checkboxes {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-family: 'arial', 'sans-serif';
+            font-size: 20px;
+            background-color: white;
+            border: 1px solid black;
+            padding: 5px 5px 5px 5px;
+        }
+        .weather_marker{
+             background-color: #ffff;
+             background-size: cover;
+             width: 15px;
+             height: 15px;
+             border-radius: 50%;
+             cursor: pointer;
+        }
+        .air_marker{
+             background-color: #ffff;
+             background-size: cover;
+             width: 15px;
+             height: 15px;
+             border-radius: 50%;
+             cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<nav id= 'checkboxes'>
+        <input type="checkbox" name="기상정보" id="weatherCheck" >Weather
+        <Br>
+        <input type="checkbox" name="미세먼지" id="airCheck">Air Quality
+    </nav>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWljdCIsImEiOiJjamxmeHZnMnAwaWlrM3ZwMTFwZzNzcDZrIn0.VlZtCnZpAgFtjgy8g1zRyA';
+
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v9',
+    center: [127.4614,37.4],
+    zoom: 8
+    //네비게이션 map style 'mapbox://styles/mapbox/navigation-preview-night-v2'
+    //커스텀 style 'mapbox://styles/aict/cjlhcc8dw024m2squ7vhz3ptd',
+    //dark style 'mapbox://styles/mapbox/dark-v9'
+
+});
+
+map.on('load', function () { //처음에 map가져올때 기본 layer추가
+
+    var layers = map.getStyle().layers;
+    map.addLayer({
+        'id': 'Kyonggimap',
+        'type': 'line', //fill
+        'source': {
+            'type': 'geojson',
+            'data':'https://gist.githubusercontent.com/SEfriends/545b3c0b33f96e5a4b314befc9e404b5/raw/5a32edb6b5500a76162fbbe60ff25a60bafa0fb6/map.geojson'
+
+            //경기도 데이터 'https://gist.githubusercontent.com/SEfriends/fb3d53f79b014e69746b5367650ab5be/raw/595ffdb750c45d4489dd5ccd25b03f92c4f44c30/map.geojson'
+            //전국 동까지 나눈거 데이터 https://raw.githubusercontent.com/vuski/admdongkor/master/ver20180724/HangJeongDong_ver20180724.geojson
+            //QGIS로 시로 나눈거 C:/Users/wearable/Desktop/kyonggiSi.geojson
+            //경기도 시로 나눈거 https://gist.githubusercontent.com/SEfriends/545b3c0b33f96e5a4b314befc9e404b5/raw/5a32edb6b5500a76162fbbe60ff25a60bafa0fb6/map.geojson
+        },
+
+        'layout': {
+            "line-join":"round",
+            "line-cap":"round"
+        },
+        'paint': {
+            'line-color': '#ffd700',
+            'line-width':4,
+            'line-opacity':0.4
+        }
+    });
+
+});
+//check box event
+$("#weatherCheck").click(function(){
+  if($(this).is(':checked')){
+   alert("weather check");
+   weatherView();
+  } else {
+    alert("weather uncheck");
+    $('.weather_marker').remove();
+  }
+});
+
+$("#airCheck").click(function(){
+  if($(this).is(':checked')){
+   alert("air check");
+   airView();
+  } else {
+    alert("air uncheck");
+    $('.air_marker').remove();
+
+  }
+});
+
+//weather view를 url에서 가져오는거
+function weatherView(){
+    $.ajax({
+        url : "/w/weatherurl",
+        type : "GET",
+        dataType : "json",
+        success : function(result){
+
+            var weatherArr = new Array();
+
+            for(var i =0;i < result.length;i++){
+                //alert(jsonToGeoJson(result[i]).properties.city); //feature
+                //alert(result[i].name);
+                weatherArr.push(jsonToGeoJson(result[i]));
+
+            }
+            //alert(result[0].name);
+            //alert(result[0].coord.Lat);
+            //alert(result[0].weather[0].main);
+           //alert(result[0].main.temp);
+           //alert("이미지주소 http://openweathermap.org/img/w/"+result[0].weather[0].icon+".png");
+
+            //alert("weather 어레이"+weatherArr[0].type);
+            var weatherJSON = {type:"FeatureCollection",features:weatherArr};
+            alert("weatherJSON다 만듬");
+
+            weatherJSON.features.forEach(function(element) {
+                var icon = element.properties.icon;
+                //alert("하나씩 꺼내기"+icon);
+                var el = document.createElement('div');
+                el.className = 'weather_marker';
+               // el.style.backgroundImage = 'url('+element.properties.icon+')
+
+                new mapboxgl.Marker(el)
+                    .setLngLat(element.geometry.coordinates)
+                    .addTo(map);
+                //alert("마커찍기"+element.geometry.coordinates)
+
+            });
+        },
+        error : function(xhr,status,error){
+            alert(error);
+        }
+    });
+}
+//mapbox에 올릴 Geojson형식으로 바꾸기
+
+function jsonToGeoJson(weatherItem){
+    var feature = {
+      type: "Feature",
+      properties: {
+        city: weatherItem.name,
+        weather: weatherItem.weather[0].main,
+        temperature: weatherItem.main.temp,
+        min: weatherItem.main.temp_min,
+        max: weatherItem.main.temp_max,
+        humidity: weatherItem.main.humidity,
+        pressure: weatherItem.main.pressure,
+        windSpeed: weatherItem.wind.speed,
+        windDegrees: weatherItem.wind.deg,
+        windGust: weatherItem.wind.gust,
+        clouds: weatherItem.clouds.all,
+        icon: "http://openweathermap.org/img/w/"
+              + weatherItem.weather[0].icon  + ".png",
+        coordinates: [weatherItem.coord.Lon, weatherItem.coord.Lat]
+      },
+      geometry: {
+        type: "Point",
+        coordinates: [weatherItem.coord.Lon, weatherItem.coord.Lat]
+      }
+    };
+
+return feature;
+}
+
+function airView(){
+     $.ajax({
+        url : "/w/airurl",
+        type : "GET",
+        dataType : "json",
+        success : function(result){
+
+            var airrArr = new Array();
+            alert(result.length);
+            for(var j=0; j < result.length;j++){
+                alert(result[j].lat);
+                //alert(jsonToGeoJson(result[i]).properties.city); //feature
+                //alert(result[i].name);
+                airArr.push(jsonToGeoJson2(result[i]));
+                alert("어레이에 넣기");
+            }
+
+            alert("weather 어레이"+weatherArr[0].type);
+            var weatherJSON = {type:"FeatureCollection",features:weatherArr};
+            //alert("weatherJSON다 만듬");
+
+            weatherJSON.features.forEach(function(element) {
+
+            });
+        },
+        error : function(xhr,status,error){
+            alert(error);
+        }
+    });
+
+}
+
+function jsonToGeoJson2(airItem){
+    var feature ={
+       type:"Feature",
+       properties:{
+        lat : airItem.lat,
+        lon : airItem.lon,
+        uid : airItem.uid,
+        aqi : airItme.aqi
+       },
+        geometry: {
+        type: "Point",
+        coordinates: [airItem.lat, airItem.lon]
+      }
+    };
+    return feature;
+}
+
+
+</script>
+
+
+</body>
+</html>

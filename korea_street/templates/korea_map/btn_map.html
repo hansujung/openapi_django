@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>경기도지역 교통정보</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      input.chk-btn {
+        display: none;
+      }
+      input.chk-btn + label {
+        border: 1px solid grey;
+        background: ghoswhite;
+        padding: 5px 8px;
+        cursor: pointer;
+        border-radius: 5px;
+
+      }
+      input.chk-btn:not(:checked) + label:hover {
+        box-shadow: 0px 1px 3px;
+      }
+      input.chk-btn + label:active,
+      input.chk-btn:checked + label {
+        box-shadow: 0px 0px 3px inset;
+        color: #FFFFFF;
+        background: #1F1F1F;
+      }
+
+    </style>
+  </head>
+  <body>
+  <div id="inputForm">
+    <form>
+      <div id="btnMap" style="padding : 10px;">
+        <input type="checkbox" id="cctvInfo" name="filters" class="chk-btn"/>
+        <label for="cctvInfo">CCTV 정보보기</label>
+
+        <input type="checkbox" id="accidInfo" name="filters" class="chk-btn"/>
+        <label for="accidInfo">사고 정보보기</label>
+
+        <input type="checkbox" id="constInfo" name="filters" class="chk-btn"/>
+        <label for="constInfo">공사 정보보기</label>
+      </div>
+    </form>
+  </div>
+    <div id="map"></div>
+
+    <script>
+
+
+      var cctvInfo = document.getElementById('cctvInfo');
+      var accidInfo = document.getElementById('accidInfo');
+      var constInfo = document.getElementById('constInfo');
+
+      var cctvList = {{ cctv_list|safe }};
+      var accidList = {{ accid_list|safe }};
+      var constList = {{ const_list|safe }};
+
+
+      var yellStar = {
+          path: 'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
+          fillColor: 'yellow',
+          fillOpacity: 0.8,
+          scale: 0.1,
+          strokeColor: 'yellow',
+          strokeWeight: 1
+        };
+
+      var blueStar = {
+          path: 'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
+          fillColor: 'blue',
+          fillOpacity: 0.8,
+          scale: 0.1,
+          strokeColor: 'blue',
+          strokeWeight: 1
+        };
+
+      var redStar = {
+          path: 'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
+          fillColor: 'red',
+          fillOpacity: 0.8,
+          scale: 0.1,
+          strokeColor: 'red',
+          strokeWeight: 1
+        };
+
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 15,
+          center: new google.maps.LatLng(37.394912, 127.111153)
+        });
+
+        var script = document.createElement('script');
+        script.src = 'https://developers.google.com/maps/documentation/javascript/examples/json/earthquake_GeoJSONP.js';
+        document.getElementsByTagName('head')[0].appendChild(script);
+      }
+
+      window.eqfeed_callback = function(results) {
+        var Infowindow = new google.maps.InfoWindow;
+
+        <!-- CCTV 데이터 불러오기 -->
+        for (var i = 0; i < cctvList.length; i++) {
+          var cctvData = JSON.parse(cctvList[i]);
+          var cctvLatLng = new google.maps.LatLng(cctvData.lat, cctvData.lng);
+          var cctvMarker = new google.maps.Marker({
+            title: cctvData.title,
+            position: cctvLatLng,
+            icon: yellStar,
+            map: map
+          });
+          <!-- 마커 클릭하면 CCTV 표시 -->
+          (function(cctvMarker, cctvData){
+            google.maps.event.addListener(cctvMarker, 'click', function(e) {
+               Infowindow.setContent('<h2>' + cctvData.title + '</h2> <br/> <iframe width=100%"  height="300vh" src="' + cctvData.content +'" frameborder="none" allowfullscreen></iframe>');
+               Infowindow.open(map, cctvMarker);
+            });
+          })(cctvMarker, cctvData);
+         }
+
+         <!-- 사고 데이터 불러오기 -->
+         for (var i = 0; i < accidList.length; i++) {
+          var accidData = JSON.parse(accidList[i]);
+          var accidLatLng = new google.maps.LatLng(accidData.lat, accidData.lng);
+          var accidMarker = new google.maps.Marker({
+            title: accidData.title,
+            position: accidLatLng,
+            icon: redStar,
+            map: map
+          });
+          <!-- 마커 클릭하면 공사 내용 표시 -->
+          (function(accidMarker, accidData){
+            google.maps.event.addListener(accidMarker, 'click', function(e) {
+               Infowindow.setContent('<h1>' + accidData.title + '</h1>');
+               Infowindow.open(map, accidMarker);
+            });
+          })(accidMarker, accidData);
+         }
+
+        <!-- 공사 데이터 불러오기 -->
+         for (var i = 0; i < constList.length; i++) {
+          var constData = JSON.parse(constList[i]);
+          var constLatLng = new google.maps.LatLng(constData.lat, constData.lng);
+          var constMarker = new google.maps.Marker({
+            title: constData.title,
+            position: constLatLng,
+            icon: blueStar,
+            map: map
+          });
+          <!-- 마커 클릭하면 공사 내용 표시 -->
+          (function(constMarker, constData){
+            google.maps.event.addListener(constMarker, 'click', function(e) {
+               Infowindow.setContent('<h1>' + constData.title + '</h1>');
+               Infowindow.open(map, constMarker);
+            });
+          })(constMarker, constData);
+         }
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBP2_yyR0qCLI4URX-XSAqYMabUwhZwIKI&callback=initMap"
+    async defer></script>
+  </body>
+</html>

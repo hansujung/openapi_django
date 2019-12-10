@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8' />
+  <title>경기도 교통</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.js'></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.48.0/mapbox-gl.css' rel='stylesheet' />
+  <style>
+   body { margin:0; padding:0; font-family: Oswald;}
+   #map { position:absolute; top:0; bottom:0; width:100%; }
+   .cctvMarker {background-color: #e1ff02; background-size: cover; width: 15px; height: 15px; border-radius: 50%; cursor: pointer;}
+   .accidMarker {background-color: #ff2188; background-size: cover; width: 15px; height: 15px; border-radius: 50%; cursor: pointer;}
+   .constMarker {background-color: #39f6f9; background-size: cover; width: 15px; height: 15px; border-radius: 50%; cursor: pointer;}
+   .mapboxgl-popup { max-width: 200px;}
+   .mapboxgl-popup-content {text-align: center;}
+   .info-group { position:absolute; top:10px; left:10px width:150px; z-index:1; max-width:100%; color:#fff; }
+  </style>
+</head>
+<body>
+
+<div id='map'></div>
+<nav id='info-group' class='info-group'>
+    <input class='checkbox' type='checkbox' id='cctvInfo'>
+    <label for='cctvInfo'>CCTV</label>
+    <input class='checkbox' type='checkbox' id='accidInfo'>
+    <label for='accidInfo'>Accident</label>
+    <input class='checkbox' type='checkbox' id='constInfo'>
+    <label for='constInfo'>Construction</label>
+</nav>
+<script>
+// map
+mapboxgl.accessToken = '{{ mapboxToken }}';
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/navigation-preview-night-v2',
+  center: [127.044488, 37.294271], //center > 광교
+  zoom: 15.0
+});
+
+$(".cctvMarker").click(function(){
+    alert("test");
+});
+
+
+// checkbox
+$("#cctvInfo").click(function(){
+  if($(this).is(':checked')){
+    cctvOnScreen();
+  } else {
+    $(".cctvMarker").remove();
+  }
+});
+
+$("#accidInfo").click(function(){
+  if($(this).is(':checked')){
+    accidOnScreen();
+  } else {
+    $(".accidMarker").remove();
+  }
+});
+
+$("#constInfo").click(function(){
+  if($(this).is(':checked')){
+    constOnScreen();
+  } else {
+    $(".constMarker").remove();
+  }
+});
+
+
+// Data >> Marker
+// cctv
+function cctvOnScreen(){
+    $.ajax({
+        url:"/st/cctvurl",
+        type:'GET',
+        dataType: "json",
+        success:function(result){
+            var cctvList = result;
+            var cctvArray = new Array();
+            for(var i = 0; i < cctvList.length; i++){
+                var cctvData = JSON.parse(cctvList[i]);
+                var data = new Object();
+                data.type = "Feature";
+                data.geometry = {type: "Point", coordinates: [cctvData.lng, cctvData.lat]};
+                data.properties = {title: cctvData.title, description: cctvData.content};
+                cctvArray.push(data);
+            }
+            var cctvJSON = {type: "FeatureCollection", features: cctvArray};
+
+            cctvJSON.features.forEach(function(marker) {
+                var el = document.createElement('div');
+                el.className = 'cctvMarker';
+
+                new mapboxgl.Marker(el)
+                    .setLngLat(marker.geometry.coordinates)
+                    .setPopup(new mapboxgl.Popup({ offset: 1 }) // add popups
+                    .setHTML('<h3><a href = "'+marker.properties.description+'">' + marker.properties.title +
+                        '</a></h3> <br/> <iframe width="100%" height="100%" src="' + marker.properties.description +
+                        '" frameborder="none" allowfullscreen></iframe><br/><p>국토교통부 제공</p>'))
+                    .addTo(map);
+            });
+        },error:function(jqXHR, textStatus, errorThrown){
+            alert("Error\n" + textStatus + " : " + errorThrown);
+            self.close();
+        }
+    });
+
+}
+
+
+// Accident
+function accidOnScreen(){
+    $.ajax({
+        url:"/st/accidurl",
+        type:'GET',
+        dataType: "json",
+        success:function(result){
+            var accidList = result;
+            var accidArray = new Array();
+
+            for(var i = 0; i < accidList.length; i++){
+                var accidData = JSON.parse(accidList[i]);
+                var data = new Object();
+                data.type = "Feature";
+                data.geometry = {type: "Point", coordinates: [accidData.lng, accidData.lat]};
+                data.properties = {title: accidData.title, description: accidData.content};
+                accidArray.push(data);
+            }
+
+            var accidJSON = {type: "FeatureCollection", features: accidArray};
+
+            accidJSON.features.forEach(function(marker) {
+                var el = document.createElement('div');
+                el.className = 'accidMarker';
+
+                new mapboxgl.Marker(el)
+                    .setLngLat(marker.geometry.coordinates)
+                    .setPopup(new mapboxgl.Popup({ offset: 1 }) // add popups
+                    .setHTML('<h3>' + marker.properties.title + '</h3>'))
+                    .addTo(map);
+            });
+        },error:function(jqXHR, textStatus, errorThrown){
+            alert("Error\n" + textStatus + " : " + errorThrown);
+            self.close();
+        }
+    });
+}
+
+// Construction
+function constOnScreen(){
+    $.ajax({
+        url:"/st/consturl",
+        type:'GET',
+        dataType: "json",
+        success:function(result){
+            var constList = result;
+            var constArray = new Array();
+
+            for(var i = 0; i < constList.length; i++){
+                var constData = JSON.parse(constList[i]);
+                var data = new Object();
+                data.type = "Feature";
+                data.geometry = {type: "Point", coordinates: [constData.lng, constData.lat]};
+                data.properties = {title: constData.title, description: constData.content};
+                constArray.push(data);
+            }
+
+            var constJSON = {type: "FeatureCollection", features: constArray};
+
+            constJSON.features.forEach(function(marker) {
+                var el = document.createElement('div');
+                el.className = 'constMarker';
+
+                new mapboxgl.Marker(el)
+                    .setLngLat(marker.geometry.coordinates)
+                    .setPopup(new mapboxgl.Popup({ offset: 1 }) // add popups
+                    .setHTML('<h3>' + marker.properties.title + '</h3>'))
+                    .addTo(map);
+            });
+        },error:function(jqXHR, textStatus, errorThrown){
+            alert("Error\n" + textStatus + " : " + errorThrown);
+            self.close();
+        }
+    });
+}
+
+
+</script>
+
+</body>
+</html>
