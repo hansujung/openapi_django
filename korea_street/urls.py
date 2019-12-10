@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from . import views
 
+
 urlpatterns = [
     url(r'^korea/', views.korea_map, name='korea_map'),
     url(r'^$', views.test_map, name='test_map'),

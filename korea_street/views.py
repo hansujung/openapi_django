@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST, require_GET
 
 # traffic information (CCTV, Event(Accident, Construction)
 class GetData:
-    API_KEY = '1534915956107'
+    API_KEY = 'API_KEY'
 
     # params = "key=%s&ReqType=2&MinX=124.100000&MaxX=129.800000&MinY=33.100000&MaxY=39.100000&type=" % API_KEY # 전체
     params = "key=%s&ReqType=2&MinX=126.100000&MaxX=127.800000&MinY=36.900000&MaxY=38.500000&type=" % API_KEY # 경기도 부분만
@@ -163,8 +163,8 @@ def korea_map(request):
     return render(request, 'korea_map/korea_map.html', {})
 
 def test_map(request):
-    # mapboxToken = "pk.eyJ1IjoiYWljdCIsImEiOiJjamxmeHZnMnAwaWlrM3ZwMTFwZzNzcDZrIn0.VlZtCnZpAgFtjgy8g1zRyA"
-    mapboxToken = "pk.eyJ1IjoiaGFzc3p6IiwiYSI6ImNqbGdibnB0czE1dnUza3BhM3ZiZGE1MmMifQ.PdUA8uR-a7BApNBugthSQA"
+    # mapboxToken = "DATA_SET_API_KEY"
+    mapboxToken = "DATA_SET_API_KEY"
     # getDate = GetData()
     # content = {'cctv_list': getDate.getCCTV(), "accid_list": getDate.getAcci(), "const_list" : getDate.getConst(), "mapboxToken":mapboxToken}
     content = { "mapboxToken":mapboxToken }
@@ -202,7 +202,7 @@ def const_url(request):
 
 # # information (public data portal)
 # class GetOtherData:
-#     DATA_SET_API_KEY = "afYQPSYR8BIhn6sZe4InwLX8vBfZfXYbKkVBHU9CAIXmTbqvc4fcn6sinGJTQ9529dAwEW2XgTDC5fz7pKEzAg%3D%3D"
+#     DATA_SET_API_KEY = "DATA_SET_API_KEY"
 #     elcty_chrstn_url = 'http://api.data.go.kr/openapi/'
 #
 #     def getElctyCarChrstn(self):
