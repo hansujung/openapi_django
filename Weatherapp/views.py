@@ -7,13 +7,13 @@ from django.http import HttpResponse
 from django.views.decorators.http import require_POST, require_GET
 
 """
-weatherurl = 'http://api.openweathermap.org/data/2.5/box/city?bbox=126.7,36.9,127.8,38.5,11&cluster=yes&format=json&APPID=45177ff490cc791de1def08e071936b1'
+weatherurl = 'http://api.openweathermap.org/data/2.5/box/city?bbox=126.7,36.9,127.8,38.5,11&cluster=yes&format=json&APPID=appid'
 wdata = urlopen(weatherurl).read()
 jwdata = json.loads(wdata)
 kwdata = jwdata['list']
 js_data = json.dumps(kwdata)
 
-airurl='https://api.waqi.info/map/bounds/?latlng=39.379436,116.091230,40.235643,116.784382&token=2089b05319f581b79a51540823d2984060a0127e'
+airurl='https://api.waqi.info/map/bounds/?latlng=39.379436,116.091230,40.235643,116.784382&token=token'
 adata=urlopen(airurl).read()
 jadata=json.loads(adata)
 kadata=jadata['data']
@@ -24,7 +24,7 @@ kadata=jadata['data']
 class Data:
 
     def getWeather(self):
-        weatherurl = 'http://api.openweathermap.org/data/2.5/box/city?bbox=126.7,36.9,127.8,38.5,11&cluster=yes&format=json&APPID=45177ff490cc791de1def08e071936b1'
+        weatherurl = 'http://api.openweathermap.org/data/2.5/box/city?bbox=126.7,36.9,127.8,38.5,11&cluster=yes&format=json&APPID=appid'
         wdata = urlopen(weatherurl).read()
         jwdata = json.loads(wdata)
         kwdata = jwdata['list']
@@ -37,7 +37,7 @@ class Data:
         return kwdata
 
     def getAir(self):
-        airurl = 'https://api.waqi.info/map/bounds/?latlng=37.345131,126.709022,37.601629,127.185752&token=41da8ebfbc9cc68442af347291689e8cbeb5a9b1' #다시바운드 찾기
+        airurl = 'https://api.waqi.info/map/bounds/?latlng=37.345131,126.709022,37.601629,127.185752&token=token' #다시바운드 찾기
         adata = urlopen(airurl).read()
         jadata = json.loads(adata)
         kadata = jadata['data']
